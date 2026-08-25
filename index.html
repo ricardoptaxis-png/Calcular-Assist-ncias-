@@ -187,7 +187,6 @@
 
         <div class="form-group">
           <label for="portagens">Portagens (€)</label>
-          <!-- Mudado para type="text" para permitir formatar os cêntimos à medida que escreve -->
           <input type="text" id="portagens" value="0.00" inputmode="numeric">
         </div>
       </div>
@@ -198,8 +197,8 @@
   </div>
 
   <script>
-    // 1. COLE AQUI O SEU LINK DO APPS SCRIPT
-    const APPS_SCRIPT_URL = "AIzaSyAdCRK_YgVyufdPfl6bOT4JrFBkwJNLDyE";
+    // COLE AQUI O SEU LINK DO GOOGLE APPS SCRIPT (QUE TERMINA EM /exec)
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWVAyYgoj1woohVxaDvMyif5m9KIYzRSeeihj-uq_xc5rgVYU9wkzEUxkUCtJ5rtEzOg/exec";
     let companhiaSelecionadaGlobal = "";
 
     function initAutocomplete() {
@@ -216,10 +215,10 @@
       }
     };
 
-    // Formatar portagens estilo caixa multibanco/supermercado
+    // Formatação dos cêntimos nas portagens
     const inputPortagens = document.getElementById('portagens');
     inputPortagens.addEventListener('input', function(e) {
-      let valor = e.target.value.replace(/\D/g, ""); // Remove tudo o que não seja número
+      let valor = e.target.value.replace(/\D/g, "");
       if (valor === "") valor = "0";
       
       let numero = parseInt(valor, 10) / 100;
@@ -292,7 +291,7 @@
       .then(data => {
         const kmFormatados = Number(data.totalKm).toFixed(1);
         alert("Serviço guardado com sucesso! Total Km: " + kmFormatados + " km");
-        document.getElementById("serviceForm".reset());
+        document.getElementById("serviceForm").reset();
         document.querySelectorAll('.company-card').forEach(card => card.classList.remove('selected'));
         companhiaSelecionadaGlobal = "";
         document.getElementById("base").value = "Rua Professor Camilo Oliveira 257 São Cosme Gondomar";
