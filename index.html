@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registo de Serviço - Táxi</title>
+  
+  <!-- LINHA DO GOOGLE MAPS PARA SUGESTÕES DE MORADA -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdCRK_YgVyufdPfl6bOT4JrFBkwJNLDyE&libraries=places&language=pt"></script>
+
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f4f6f8; display: flex; justify-content: center; padding: 20px; }
+    
+    .phone-container {
+      width: 100%;
+      max-width: 390px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 20px;
+    }
+
+    .header { background-color: #1a73e8; color: #ffffff; padding: 18px 20px; text-align: center; }
+    .header h2 { font-size: 18px; font-weight: 600; }
+
+    .form-container { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 13px; font-weight: 600; color: #3c4043; }
+    
+    input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus, textarea:focus { border-color: #1a73e8; }
+    input[readonly] { background-color: #f1f3f4; color: #5f6368; font-size: 12px; }
+
+    .input-with-btn { display: flex; gap: 8px; }
+    .input-with-btn input { flex: 1; }
+    .btn-gps {
+      background-color: #e8f0fe;
+      border: 1px solid #1a73e8;
+      color: #1a73e8;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .company-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .company-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .company-card {
+      background: #ffffff;
+      border: 2px solid #dadce0;
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #3c4043;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .company-card span.icon { font-size: 16px; }
+    .company-card.selected {
+      border-color: #1a73e8;
+      background-color: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    .row { display: flex; gap: 12px; }
+    .row .form-group { flex: 1; }
+
+    .btn-submit {
+      background-color: #1a73e8;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .pac-container {
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 1px solid #dadce0;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <div class="header">
+      <h2>Novo Serviço</h2>
+    </div>
+
+    <form class="form-container" id="serviceForm">
+      
+      <!-- Linha com Motorista e N.º do Táxi -->
+      <div class="row">
+        <div class="form-group" style="flex: 2;">
+          <label for="motorista">Nome do Motorista *</label>
+          <input type="text" id="motorista" placeholder="Nome do motorista" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label for="numTaxi">N.º Táxi *</label>
+          <input type="text" id="numTaxi" maxlength="3" placeholder="Ex: 01" required oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="numProcesso">N.º de Processo / ID *</label>
+        <input type="text" id="numProcesso" placeholder="Ex: 10452" required>
+      </div>
+
+      <div class="company-box">
+        <label>Companhia / Assistência</label>
+        <div class="company-grid">
+          <div class="company-card" onclick="selecionarCompanhia(this, 'RNA')">
+            <span class="icon">🚗</span>
+            <span>RNA</span>
+          </div>
+          <div class="company-card" onclick="selecionarCompanhia(this, 'Europ Assistance')">
+            <span class="icon">🌍</span>
+            <span>Europ Assistance</span>
+          </div>
+          <div class="company-card" onclick="selecionarCompanhia(this, 'Mapfre')">
+            <span class="icon">🛡️</span>
+            <span>Mapfre</span>
+          </div>
+          <div class="company-card" onclick="selecionarCompanhia(this, 'Interpartner')">
+            <span class="icon">🤝</span>
+            <span>Interpartner</span>
+          </div>
+        </div>
+        <input type="text" id="companhiaOutra" placeholder="Ou escrever outra companhia..." style="margin-top: 6px;">
+      </div>
+
+      <div class="form-group">
+        <label for="base">Base (Ponto A)</label>
+        <input type="text" id="base" value="Rua Professor Camilo Oliveira 257 São Cosme Gondomar" readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="origem">Origem (Ponto B)</label>
+        <div class="input-with-btn">
+          <input type="text" id="origem" placeholder="Escreva a morada ou local..." required>
+          <button type="button" class="btn-gps" onclick="capturarGPS('origem')" title="Capturar GPS">📍</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="destino">Destino (Ponto C)</label>
+        <div class="input-with-btn">
+          <input type="text" id="destino" placeholder="Escreva a morada ou local..." required>
+          <button type="button" class="btn-gps" onclick="capturarGPS('destino')" title="Capturar GPS">📍</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="passageiros">N.º Passageiros</label>
+          <input type="number" id="passageiros" value="1" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label for="portagens">Portagens (€)</label>
+          <input type="text" id="portagens" value="0.00" inputmode="numeric">
+        </div>
+      </div>
+
+           <button type="submit" class="btn-submit">Guardar Serviço</button>
+
+    </form>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWVAyYgoj1woohVxaDvMyif5m9KIYzRSeeihj-uq_xc5rgVYU9wkzEUxkUCtJ5rtEzOg/exec";
+    let companhiaSelecionadaGlobal = "";
+
+    function initAutocomplete() {
+      const options = {
+        componentRestrictions: { country: "pt" }
+      };
+      new google.maps.places.Autocomplete(document.getElementById('origem'), options);
+      new google.maps.places.Autocomplete(document.getElementById('destino'), options);
+    }
+
+    window.onload = function() {
+      if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        initAutocomplete();
+      }
+    };
+
+    // Formatação dos cêntimos nas portagens
+    const inputPortagens = document.getElementById('portagens');
+    inputPortagens.addEventListener('input', function(e) {
+      let valor = e.target.value.replace(/\D/g, "");
+      if (valor === "") valor = "0";
+      
+      let numero = parseInt(valor, 10) / 100;
+      e.target.value = numero.toFixed(2);
+    });
+
+    inputPortagens.addEventListener('focus', function() {
+      if (this.value === "0.00") {
+        this.value = "";
+      }
+    });
+
+    inputPortagens.addEventListener('blur', function() {
+      if (this.value === "") {
+        this.value = "0.00";
+      }
+    });
+
+    function selecionarCompanhia(elemento, nomeCompanhia) {
+      document.querySelectorAll('.company-card').forEach(card => card.classList.remove('selected'));
+      elemento.classList.add('selected');
+      companhiaSelecionadaGlobal = nomeCompanhia;
+      document.getElementById("companhiaOutra").value = "";
+    }
+
+    document.getElementById("companhiaOutra").addEventListener("input", function() {
+      document.querySelectorAll('.company-card').forEach(card => card.classList.remove('selected'));
+      companhiaSelecionadaGlobal = "";
+    });
+
+    function capturarGPS(idInput) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          document.getElementById(idInput).value = lat + "," + lng;
+        }, function() {
+          alert("Erro ao obter a localização GPS.");
+        });
+      } else {
+        alert("GPS não suportado neste navegador.");
+      }
+    }
+
+    document.getElementById("serviceForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      let finalCompanhia = companhiaSelecionadaGlobal;
+      const textoOutra = document.getElementById("companhiaOutra").value;
+      if (textoOutra) {
+        finalCompanhia = textoOutra;
+      }
+
+      const dados = {
+        motorista: document.getElementById("motorista").value,
+        numTaxi: document.getElementById("numTaxi").value,
+        numProcesso: document.getElementById("numProcesso").value,
+        companhia: finalCompanhia || "Não especificada",
+        base: document.getElementById("base").value,
+        origem: document.getElementById("origem").value,
+        destino: document.getElementById("destino").value,
+        passageiros: document.getElementById("passageiros").value,
+        portagens: document.getElementById("portagens").value,
+        observacoes: document.getElementById("observacoes").value
+      };
+
+      fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(dados)
+      })
+      .then(res => res.json())
+      .then(data => {
+        const kmFormatados = Number(data.totalKm).toFixed(1);
+        alert("Serviço guardado com sucesso! Total Km: " + kmFormatados + " km");
+        document.getElementById("serviceForm").reset();
+        document.querySelectorAll('.company-card').forEach(card => card.classList.remove('selected'));
+        companhiaSelecionadaGlobal = "";
+        document.getElementById("base").value = "Rua Professor Camilo Oliveira 257 São Cosme Gondomar";
+        document.getElementById("portagens").value = "0.00";
+      })
+      .catch(err => alert("Erro ao enviar dados: " + err));
+    });
+  </script>
+
+</body>
+</html>
